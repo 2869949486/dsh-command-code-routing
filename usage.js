@@ -614,9 +614,14 @@ export function apply(ctx, config = {}) {
   function record(sessionId, seq, message, usage, time) {
     const source = message?.source
     // Only the metered providers count: the free side of the pool is not billed,
-    // and the DeepSeek fallback has its own console.
+    // and the DeepSeek fallback has its own console. Which prefix is metered
+    // depends on the vendor — a Command Code dashboard must not fold in the
+    // OpenCode sessions still sitting in the log directory.
     const provider = String(source?.provider ?? '')
-    if (source === undefined || (!provider.startsWith('opencode') && !provider.startsWith('commandcode'))) return
+    const metered = cfg.vendor === 'commandcode'
+      ? provider.startsWith('commandcode')
+      : provider.startsWith('opencode')
+    if (source === undefined || !metered) return
     const key = `${sessionId}:${seq}`
     if (seen.has(key)) return
     seen.add(key)
@@ -855,6 +860,10 @@ export function apply(ctx, config = {}) {
     }
     for (const entry of catalog) {
       if (models.has(entry.id)) continue
+      // The vendor's catalogue is wider than the plan: Command Code lists every
+      // model it can route, while a subscription only serves a priced subset.
+      // Listing the rest would advertise models the router cannot use.
+      if (cfg.vendor === 'commandcode' && modelPrices[entry.id] === undefined) continue
       models.set(entry.id, {
         model: entry.id,
         requests: 0,
