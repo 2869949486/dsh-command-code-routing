@@ -1,0 +1,65 @@
+{
+  "name": "dsh-command-code-routing",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "dsh plugin: Command Code (GOAT) account pool with automatic failover and credit-window routing, plus a per-model usage dashboard, in one Settings page.",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "router.js",
+    "usage.js",
+    "commandcode.js",
+    "client.js",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh-CN.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "test.mjs",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  },
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "command-code",
+    "usage",
+    "multi-account",
+    "quota",
+    "router",
+    "routing",
+    "failover",
+    "i18n",
+    "billing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2869949486/dsh-command-code-routing.git"
+  },
+  "homepage": "https://github.com/2869949486/dsh-command-code-routing#readme",
+  "bugs": {
+    "url": "https://github.com/2869949486/dsh-command-code-routing/issues"
+  },
+  "engines": {
+    "dsh": "^0.2.0-rc.1"
+  }
+}
