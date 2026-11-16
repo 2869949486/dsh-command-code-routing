@@ -102,10 +102,21 @@ upstream, net, lastFailure}`，密钥一律遮罩（只回 `hint`）。同一路
 
 ## 模型
 
-provider 块声明的是 GOAT 订阅真正能调到的模型 —— OpenAI 兼容线上 62 个，Anthropic 线上 2 个 Claude。
-模型 id 保留厂商标识前缀（`deepseek/deepseek-v4.1-flash`、`moonshotai/Kimi-K3.1-Pro`）：那是协议里的 id，
-而 DSH 是把 provider 与 model 分开传的，斜杠安全。所有路由 `max_tokens` 统一 32000，`reasoning_effort`
-最高到 `max`。
+provider 块声明的是 GOAT 订阅真正能调到的模型 —— OpenAI 兼容线上 62 个。模型 id 保留厂商标识前缀
+（`deepseek/deepseek-v4.1-flash`、`moonshotai/Kimi-K3.1-Pro`）：那是协议里的 id，而 DSH 是把 provider
+与 model 分开传的，斜杠安全。所有路由 `max_tokens` 统一 32000，`reasoning_effort` 最高到 `max`。
+
+Command Code 还通过 Anthropic messages 协议（`/provider/v1/messages`）提供 Claude 系列，但 GOAT 只覆盖
+`claude-sonnet-5-5`、`claude-haiku-5-5` 两个，其余全是 premium 档（要 `individual-pro` 起）。包里默认
+**不挂**这条 provider；需要时把 `commandcode-anthropic` 那一段加回 `providers` 即可（`api: anthropic-messages`、
+`baseURL: https://api.commandcode.ai/provider`）。
+
+## 额度口径
+
+面板上每个模型的「本月上限」＝套餐额度（GOAT 基础 $70，由 `/alpha/billing/credits` 的 weekly cap ÷ 50%
+推出），5 小时与本周分别是它的 20% / 50%。Command Code 的 DEAL 模型另有官方公布的 boosted 额度，包里按
+GOAT 那一列写死：`deepseek/deepseek-v4.1-flash`、`z-ai/glm-5.3-flash`、`inclusionai/ling-3.1-flash`、
+`inclusionai/ling-3.1-flash-1019` 为 $100（见 `commandcode.js` 的 `BOOSTED_ALLOWANCE_USD`）。
 
 ## 生图
 

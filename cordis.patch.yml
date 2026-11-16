@@ -1,13 +1,14 @@
-# Command Code (GOAT) providers, replacing the OpenCode pair.
+# Command Code (GOAT) provider, replacing the OpenCode pair.
 #
 # `commandcode` speaks the OpenAI chat-completions protocol
 # (/provider/v1/chat/completions) and carries every model the plan actually
-# serves. `commandcode-anthropic` speaks the Anthropic messages protocol
-# (/provider/v1/messages) and exists because the Claude models are served only
-# there.
+# serves. Command Code also exposes the Claude models over the Anthropic
+# messages protocol (/provider/v1/messages), but only the two GOAT-eligible ones
+# would apply, so the provider is left out until it is actually wanted: drop the
+# `commandcode-anthropic` block back in to get them.
 #
-# Both providers name the same credential reference; the account pool rotates the
-# value behind it, so a second key needs no config change.
+# The provider names the credential reference; the account pool rotates the value
+# behind it, so a second key needs no config change.
 #
 # The insert is ONE entry: `dsh-command-code-routing` mounts the account pool /
 # quota router and the usage dashboard together. `usage:` and `router:` hold the
@@ -586,36 +587,6 @@
             reasoningEfforts:
               low: low
               high: high
-              max: max
-              off:
-      commandcode-anthropic:
-        displayName: Command Code (Claude)
-        api: anthropic-messages
-        baseURL: https://api.commandcode.ai/provider
-        apiKeyEnv: COMMANDCODE_API_KEY
-        models:
-          - id: 'claude-haiku-5-5'
-            name: 'Claude Haiku 5.5'
-            contextWindow: 1000000
-            maxTokens: 32000
-            input: [text, image]
-            reasoningEfforts:
-              low: low
-              medium: medium
-              high: high
-              xhigh: xhigh
-              max: max
-              off:
-          - id: 'claude-sonnet-5-5'
-            name: 'Claude Sonnet 5.5'
-            contextWindow: 1000000
-            maxTokens: 32000
-            input: [text, image]
-            reasoningEfforts:
-              low: low
-              medium: medium
-              high: high
-              xhigh: xhigh
               max: max
               off:
 

@@ -120,10 +120,25 @@ endpoint used by the “edit key” box.
 ## Models
 
 The provider block declares the models that a GOAT subscription can actually call — 62 on the
-OpenAI-compatible route and two Claude models on the Anthropic route. Model ids keep the vendor
-prefix (`deepseek/deepseek-v4.1-flash`, `moonshotai/Kimi-K3.1-Pro`): that is the wire id, and DSH
-passes provider and model as separate fields, so the slash is safe. Every route is capped at
-`max_tokens: 32000`; `reasoning_effort` is accepted up to `max`.
+OpenAI-compatible route. Model ids keep the vendor prefix (`deepseek/deepseek-v4.1-flash`,
+`moonshotai/Kimi-K3.1-Pro`): that is the wire id, and DSH passes provider and model as separate
+fields, so the slash is safe. Every route is capped at `max_tokens: 32000`; `reasoning_effort` is
+accepted up to `max`.
+
+Command Code also serves the Claude family over the Anthropic messages protocol
+(`/provider/v1/messages`), but GOAT only covers `claude-sonnet-5-5` and `claude-haiku-5-5` — the rest
+are premium tier (`individual-pro` and up). The package therefore ships **without** that provider;
+add the `commandcode-anthropic` block back to `providers` to opt in (`api: anthropic-messages`,
+`baseURL: https://api.commandcode.ai/provider`).
+
+## Allowances
+
+The per-model “monthly cap” in the dashboard is the plan allowance — $70 for GOAT base, derived from
+`/alpha/billing/credits` as the weekly cap ÷ 50% — with the five-hour and weekly windows at 20% and
+50% of it. Command Code's DEAL models carry a published *boosted* allowance, taken from the GOAT
+column and hard-coded in `commandcode.js` as `BOOSTED_ALLOWANCE_USD`:
+`deepseek/deepseek-v4.1-flash`, `z-ai/glm-5.3-flash`, `inclusionai/ling-3.1-flash` and
+`inclusionai/ling-3.1-flash-1019` get $100.
 
 ## Images
 

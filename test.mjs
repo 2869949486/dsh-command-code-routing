@@ -1183,9 +1183,15 @@ console.log('reveal key ok')
   assert.match(patch, /^\s+apiKeyRef: COMMANDCODE_API_KEY$/m, 'and names the Command Code credential')
   assert.match(patch, /^\s+statusUrl: null$/m, 'with no published-status feed to poll')
   assert.match(patch, /api: openai-completions/, 'the catalogue provider speaks chat-completions')
-  assert.match(patch, /api: anthropic-messages/, 'and the Claude pair speaks messages')
   assert.match(patch, /baseURL: https:\/\/api\.commandcode\.ai\/provider\/v1$/m, 'chat base URL carries the /provider/v1 suffix')
-  assert.match(patch, /baseURL: https:\/\/api\.commandcode\.ai\/provider$/m, 'messages base URL stops at /provider')
+  // The Claude pair needs a second provider on the messages protocol, so it is
+  // opt-in: if it is absent, nothing may still advertise those models.
+  if (/commandcode-anthropic:/.test(patch)) {
+    assert.match(patch, /api: anthropic-messages/, 'the Claude pair speaks messages')
+    assert.match(patch, /baseURL: https:\/\/api\.commandcode\.ai\/provider$/m, 'messages base URL stops at /provider')
+  } else {
+    assert.doesNotMatch(patch, /- id: 'claude/i, 'without the messages provider no Claude model may be declared')
+  }
   const models = patch.match(/^\s{10}- id: /gm) ?? []
   assert.ok(models.length >= 60, `the picker declares the probed catalogue (found ${models.length})`)
   console.log('shipped patch ok')

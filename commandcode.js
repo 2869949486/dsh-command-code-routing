@@ -39,8 +39,6 @@ export const DEFAULT_ALLOWANCE_USD = 70
 
 /** Dollars per million tokens, straight from the Command Code catalogue. */
 export const PRICES = {
-  'claude-haiku-5-5': { input: 0.1, output: 0.5, cacheRead: 0.01, cacheWrite: 0.125 },
-  'claude-sonnet-5-5': { input: 2, output: 10, cacheRead: 0.1, cacheWrite: 2.5 },
   'meta/muse-ember': { input: 0.1, output: 0.5, cacheRead: 0.004 },
   'meta/muse-spark-1.2': { input: 1.25, output: 4.25, cacheRead: 0.15 },
   'meta/muse-spark-1.2-contributor': { input: 0.1, output: 0.2, cacheRead: 0.002 },
@@ -105,11 +103,22 @@ export const PRICES = {
   'xai/grok-4.7': { input: 2, output: 6, cacheRead: 0.5 },
 }
 
-/** Every served model is metered against the same monthly allowance, because the
- *  plan-wide credit bucket is what actually runs out. */
+/** Per-model allowances that differ from the plan pool. Command Code publishes
+ *  these on the pricing page as DEALs ("boosted credits"): the boost replaces the
+ *  model's allowance, it is not added to the pool, and it applies automatically
+ *  when the model is picked. Values below are the GOAT column. */
+export const BOOSTED_ALLOWANCE_USD = {
+  'deepseek/deepseek-v4.1-flash': 100,
+  'inclusionai/ling-3.1-flash': 100,
+  'inclusionai/ling-3.1-flash-1019': 100,
+  'z-ai/glm-5.3-flash': 100,
+}
+
+/** Every other served model is metered against the plan's own allowance, because
+ *  the plan-wide credit bucket is what actually runs out. */
 export function limitsFor(allowanceUsd = DEFAULT_ALLOWANCE_USD) {
   const limits = {}
-  for (const id of Object.keys(PRICES)) limits[id] = allowanceUsd
+  for (const id of Object.keys(PRICES)) limits[id] = BOOSTED_ALLOWANCE_USD[id] ?? allowanceUsd
   return limits
 }
 
@@ -224,7 +233,6 @@ export async function fetchUsage(key, options = {}) {
  *  those. This set only keeps the dashboard's "thinking" tag honest: it is the
  *  list probed to return `reasoning_content` on a live request. */
 const REASONING_MODELS = new Set([
-  'claude-sonnet-5-5',
   'deepseek/deepseek-v4-flash',
   'deepseek/deepseek-v4-pro',
   'deepseek/deepseek-v4.1-flash',
