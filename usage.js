@@ -29,6 +29,8 @@ import {
   LIMITS as COMMANDCODE_LIMITS,
   fetchUsage as fetchCommandCodeUsage,
   fetchCatalog as fetchCommandCodeCatalog,
+  peakFactor as commandCodePeakFactor,
+  PEAK as commandCodePeak,
 } from './commandcode.js'
 
 export const name = 'command-code-usage'
@@ -308,7 +310,9 @@ function normalize(config = {}) {
     // DeepSeek charges a peak multiplier on weekday hours; Command Code bills its
     // catalogue price flat, so a `deepseek/...` model id must not inherit that
     // multiplier. Explicit config wins, otherwise the vendor decides.
-    peakAware: typeof config.peakAware === 'boolean' ? config.peakAware : vendor !== 'commandcode',
+    // Both vendors bill a peak multiplier on weekday hours; which models carry it
+  // differs, and the vendor adapter owns that rule (see `peakFactor`).
+  peakAware: typeof config.peakAware === 'boolean' ? config.peakAware : true,
     // The subscription price and its monthly allowance can be overridden here,
     // so a plan change from OpenCode needs a config edit, not a patch: the
     // discount shown on the page is derived from these two numbers.
@@ -523,9 +527,13 @@ export function peakSnapshot(cnyPerUsd, at = Date.now(), plan = 'go', overrides 
   }
 }
 
-function costOf(record, price, holidayAware = false, peakAware = true) {
+function costOf(record, price, holidayAware = false, peakAware = true, vendor = 'opencode') {
   if (price === undefined) return undefined
-  const factor = peakAware ? peakMultiplier(record.model, record.t, holidayAware) : 1
+  const factor = !peakAware
+    ? 1
+    : vendor === 'commandcode'
+      ? commandCodePeakFactor(record.model, record.t)
+      : peakMultiplier(record.model, record.t, holidayAware)
   return ((record.input / MIB) * price.input + (record.output / MIB) * price.output + (record.cacheRead / MIB) * price.cacheRead) * factor
 }
 
@@ -851,7 +859,7 @@ export function apply(ctx, config = {}) {
       entry.input += record.input
       entry.output += record.output
       entry.cacheRead += record.cacheRead
-      const cost = costOf(record, modelPrices[record.model], cfg.holidayAware, cfg.peakAware)
+      const cost = costOf(record, modelPrices[record.model], cfg.holidayAware, cfg.peakAware, cfg.vendor)
       if (cost !== undefined) entry.cost += cost
       if (record.t >= starts.rolling) entry.rolling += cost ?? 0
       if (record.t >= starts.weekly) entry.weekly += cost ?? 0
@@ -1021,11 +1029,13 @@ export function apply(ctx, config = {}) {
         input: price.input,
         output: price.output,
         cacheRead: price.cacheRead,
-        ...(cfg.peakAware && PEAK.modelPrefixes.some((prefix) => id.startsWith(prefix))
+        ...(cfg.peakAware && (cfg.vendor === 'commandcode'
+          ? commandCodePeak.modelIds.includes(id)
+          : PEAK.modelPrefixes.some((prefix) => id.startsWith(prefix)))
           ? {
             peak: {
-              factor: PEAK.factor,
-              utcWeekdayHours: PEAK.utcWeekdayHours,
+              factor: cfg.vendor === 'commandcode' ? commandCodePeak.factor : PEAK.factor,
+              utcWeekdayHours: cfg.vendor === 'commandcode' ? commandCodePeak.utcWeekdayHours : PEAK.utcWeekdayHours,
               ...(cfg.holidayAware ? { chinaHolidays: HOLIDAYS } : {}),
             },
           }

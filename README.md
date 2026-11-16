@@ -72,10 +72,17 @@ is derived from the weekly cap (`weekly.cap / 0.5`), so a plan change is a confi
 change. Per-model prices are bundled (input / output / cache-read / cache-write in $/Mtok) and are
 what the per-model column adds up.
 
-Because the API reports dollars instead of a rounded percentage, two things from the OpenCode era
-are deliberately off for this vendor: the implied-plan inference and the DeepSeek peak/off-peak
-multiplier (`peakAware: false`). Set `peakAware: true` only if you point this plugin at a provider
-that actually charges peak pricing.
+Because the API reports dollars instead of a rounded percentage, the implied-plan inference stays off
+for this vendor. Peak pricing, on the other hand, is real: the catalogue price is the **off-peak**
+rate (17 h/day), and the DeepSeek models that carry a peak note bill **2×** during `01–04` and
+`06–10` UTC, Monday to Friday (09:00–12:00 and 14:00–18:00 Beijing). `commandcode.js` owns that rule
+(`PEAK` / `peakFactor`), so cost estimates and the price document double exactly for those models and
+for nobody else — `deepseek-v4-flash-fast` and the `ultrafast` tier stay flat because the pricing page
+prints no peak row for them.
+
+Free previews are capped by request count, not by credits: `stealth/glyph-cluster:free` gets 1000
+requests/day and `thinkingmachines/inkling-2-small:free` gets 200. Their dashboard limit is therefore
+unbounded and their cost is zero — they never consume the plan allowance.
 
 ## Account pool and failover
 

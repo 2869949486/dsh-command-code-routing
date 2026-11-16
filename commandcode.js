@@ -114,15 +114,52 @@ export const BOOSTED_ALLOWANCE_USD = {
   'z-ai/glm-5.3-flash': 100,
 }
 
+/** Free previews are capped by request count per day, not by credits, so they
+ *  never touch the allowance and their dollar limit is effectively unbounded. */
+export const FREE_DAILY_REQUESTS = {
+  'stealth/glyph-cluster:free': 1000,
+  'thinkingmachines/inkling-2-small:free': 200,
+}
+
 /** Every other served model is metered against the plan's own allowance, because
  *  the plan-wide credit bucket is what actually runs out. */
 export function limitsFor(allowanceUsd = DEFAULT_ALLOWANCE_USD) {
   const limits = {}
-  for (const id of Object.keys(PRICES)) limits[id] = BOOSTED_ALLOWANCE_USD[id] ?? allowanceUsd
+  for (const id of Object.keys(PRICES)) {
+    if (FREE_DAILY_REQUESTS[id] !== undefined) limits[id] = Infinity
+    else limits[id] = BOOSTED_ALLOWANCE_USD[id] ?? allowanceUsd
+  }
   return limits
 }
 
 export const LIMITS = { goat: limitsFor() }
+
+/** Command Code bills a peak rate on weekday hours for part of the DeepSeek
+ *  family only: the catalogue price is the off-peak rate (17 h/day) and peak
+ *  doubles it. Windows are 01–04 and 06–10 UTC, Monday through Friday — 09:00–
+ *  12:00 and 14:00–18:00 in Beijing. `deepseek-v4-flash-fast` and the
+ *  `ultrafast` tier carry no peak note on the pricing page, so they stay flat. */
+export const PEAK = {
+  factor: 2,
+  utcWeekdayHours: [[1, 4], [6, 10]],
+  modelIds: [
+    'deepseek/deepseek-v4-flash',
+    'deepseek/deepseek-v4-flash-vision-exp',
+    'deepseek/deepseek-v4-pro',
+    'deepseek/deepseek-v4.1-flash',
+    'deepseek/deepseek-v4.1-flash-fast',
+  ],
+}
+
+/** 1 at the off-peak rate, `PEAK.factor` inside a weekday peak window. */
+export function peakFactor(modelId, at = Date.now()) {
+  if (!PEAK.modelIds.includes(modelId)) return 1
+  const when = new Date(at)
+  const day = when.getUTCDay()
+  if (day === 0 || day === 6) return 1
+  const hour = when.getUTCHours()
+  return PEAK.utcWeekdayHours.some(([from, to]) => hour >= from && hour < to) ? PEAK.factor : 1
+}
 
 const clampPercent = (used, cap) => {
   if (!Number.isFinite(used) || !Number.isFinite(cap) || cap <= 0) return 0

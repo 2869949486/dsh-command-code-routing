@@ -97,7 +97,7 @@
   "peakFootnote": "Gerechnet pro 1 Mio. Ausgabe-Tokens (bei einer Coding-Rechnung dominiert die Ausgabe), bei ¥{fx} je $. Haupt- und Nebenzeit ändern nur, wie schnell das Kontingent verbraucht wird, nicht das Fazit: Innerhalb des Kontingents bleibt Command Code günstiger als die offizielle API; Ausnahmen sind ein aufgebrauchtes Kontingent oder ein Modell, dessen eigenes Limit zuerst endet.",
   "footerOfficial": "Die offiziellen Prozente für 5 Stunden / Woche / Monat kommen von der Command Code-API und beschreiben das ganze Konto – Nutzung über andere Clients oder Rechner zählt mit.",
   "footerLocal": "Beträge pro Modell sind eine lokale Schätzung: Sie zählen nur das Sitzungsprotokoll dieses Harness, und genau das macht die Verteilung pro Modell sichtbar; Aufrufe anderer Tools hinterlassen lokal keine Spur.",
-  "footerPeakRule": "Beträge werden nach der Command-Code-Katalograte geschätzt (Input und Output getrennt abgerechnet); jedes Modell zählt gegen die Kapazität des Tarifs, DEAL-Modelle nutzen ihre veröffentlichte Boost-Kapazität.",
+  "footerPeakRule": "Beträge werden nach der Command-Code-Katalograte geschätzt (Input und Output getrennt abgerechnet); die DeepSeek-Kernmodelle kosten an Werktagen zu Spitzenzeiten (09:00–12:00 und 14:00–18:00 Pekinger Zeit) das Doppelte; jedes Modell zählt gegen die Kapazität des Tarifs, DEAL-Modelle nutzen die veröffentlichte boosted-Kapazität, kostenlose Vorschauen sind über Tagesanfragen begrenzt.",
   "kindCacheRead": "zwischengespeicherte Eingabe",
   "kindInput": "nicht zwischengespeicherte Eingabe",
   "kindOutput": "Ausgabe",

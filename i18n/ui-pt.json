@@ -97,7 +97,7 @@
   "peakFootnote": "Cálculo por 1 M de tokens de saída (numa fatura de código a saída domina), a ¥{fx} por dólar. O pico só muda a velocidade com que a cota queima, não a conclusão: dentro da cota, o Command Code continua mais barato que a API oficial; as exceções são a cota esgotada ou um modelo cujo limite próprio acaba antes.",
   "footerOfficial": "As porcentagens oficiais de 5 horas / semana / mês vêm da API do Command Code e descrevem a conta inteira: uso de outros clientes ou de outras máquinas também entra na conta.",
   "footerLocal": "O valor por modelo é uma estimativa local: conta só o log de sessões deste harness, que é o que permite ver a divisão por modelo; chamadas de outras ferramentas não deixam registro local.",
-  "footerPeakRule": "O valor é estimado pela tarifa do catálogo da Command Code (entrada e saída cobradas separadamente); cada modelo consome a franquia do plano e os modelos DEAL usam a franquia ampliada publicada.",
+  "footerPeakRule": "O valor é estimado pela tarifa do catálogo da Command Code (entrada e saída cobradas separadamente); os modelos principais DeepSeek custam o dobro em horário de pico em dias úteis (09:00–12:00 e 14:00–18:00, hora de Pequim); cada modelo consome a franquia do plano, os modelos DEAL usam a franquia boosted publicada e as prévias gratuitas são limitadas por requisições diárias.",
   "kindCacheRead": "entrada em cache",
   "kindInput": "entrada sem cache",
   "kindOutput": "saída",

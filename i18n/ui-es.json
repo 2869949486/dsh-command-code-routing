@@ -97,7 +97,7 @@
   "peakFootnote": "Calculado por millón de tokens de salida (en una factura de código manda la salida), a ¥{fx} por dólar. Las horas pico solo cambian la rapidez con que se consume la cuota, no la conclusión: dentro de la cuota, Command Code siempre sale más barato que la API oficial; las excepciones son que la cuota se agote o que el límite de un modelo concreto se acabe antes.",
   "footerOfficial": "Los porcentajes oficiales de 5 horas / semana / mes vienen de la API de Command Code y describen la cuenta completa: el uso desde otros clientes u otras máquinas también cuenta.",
   "footerLocal": "El importe por modelo es una estimación local: solo cuenta el registro de sesiones de este harness, que es lo que permite ver el reparto por modelo; las llamadas de otras herramientas no dejan rastro local.",
-  "footerPeakRule": "El importe se estima con la tarifa del catálogo de Command Code (entrada y salida facturadas por separado); cada modelo consume la capacidad del plan y los modelos DEAL usan su capacidad ampliada publicada.",
+  "footerPeakRule": "El importe se estima con la tarifa del catálogo de Command Code (entrada y salida facturadas por separado); los modelos principales de DeepSeek cuestan el doble en horas punta de días laborables (09:00–12:00 y 14:00–18:00, hora de Pekín); cada modelo consume la capacidad del plan, los modelos DEAL usan la capacidad boosted publicada y las vistas previas gratuitas se limitan por peticiones diarias.",
   "kindCacheRead": "entrada en caché",
   "kindInput": "entrada sin caché",
   "kindOutput": "salida",
