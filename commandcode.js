@@ -17,8 +17,8 @@
  * invoice uses.
  *
  * Endpoints that do NOT exist upstream: Command Code has no image-generation
- * route (`/provider/v1/images*` answers 404), so the image side of the profile
- * keeps its own bridge.
+ * route (`/provider/v1/images*` answers 404) and no image-output model, so this
+ * package serves text and credits only.
  */
 
 export const BASE_URL = 'https://api.commandcode.ai'

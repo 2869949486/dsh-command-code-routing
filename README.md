@@ -4,8 +4,7 @@
 
 A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin that puts a
 [Command Code](https://commandcode.ai) subscription to work: **an account pool with credit-window
-routing**, a **per-model usage dashboard**, and the **image bridge wiring** — one package, one
-Settings page.
+routing**, plus a **per-model usage dashboard** — one package, one Settings page.
 
 - **Client** — one `settings.section` page, 60-second refresh, account pool editing, a per-model
   table with capability tags, and a composer badge that names the route you are actually on.
@@ -126,13 +125,12 @@ prefix (`deepseek/deepseek-v4.1-flash`, `moonshotai/Kimi-K3.1-Pro`): that is the
 passes provider and model as separate fields, so the slash is safe. Every route is capped at
 `max_tokens: 32000`; `reasoning_effort` is accepted up to `max`.
 
-## Image bridge
+## Images
 
-Text routing is entirely Command Code. **Image generation has no Command Code endpoint** — the API
-exposes no `/images` route and the catalogue has no image-output model — so the package still
-wires the local image bridge (`dsh-image-gen` → `127.0.0.1:8791` → a proxy that holds an
-image-capable key). Point `dsh-image-gen` and `dsh-image-bridge-supervisor` wherever your own image
-backend lives; this package only supplies the wiring, never the key.
+Command Code produces no images: every `/provider/v1/images/*` route answers 404 and no model in the
+catalogue emits image output (the only image-related entries, such as `Qwen/Qwen3.8-Omni-Flash`,
+take images as *input*). This package therefore covers text and credits only, and wires no image
+tooling — pair it with an image backend of your own if you need one.
 
 ## Compatibility
 

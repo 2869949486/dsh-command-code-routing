@@ -41,8 +41,8 @@ import { BASE_URL as COMMANDCODE_BASE_URL, fetchUsage as fetchCommandCodeUsage }
 
 export const name = 'command-code-quota-router'
 
-/** Routing needs the provider registry to resolve model metadata. */
-export const inject = ['llm']
+/** Routing needs the provider registry and the credential seam to resolve pool keys. */
+export const inject = ['llm', 'credentials']
 
 const DEFAULT_USAGE_URL = 'https://opencode.ai/inference/go/v1/usage'
 // OpenCode publishes a machine-readable status feed: current verdict, one row
@@ -870,7 +870,7 @@ export function apply(ctx, config = {}) {
 
   const credentials = () => {
     try {
-      return ctx.get('credentials')
+      return ctx.credentials ?? ctx.get('credentials')
     } catch {
       return undefined
     }

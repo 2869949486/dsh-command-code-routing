@@ -33,8 +33,8 @@ import {
 
 export const name = 'command-code-usage'
 
-/** The dashboard needs the web listener; without it the plugin stays dormant. */
-export const inject = ['webServer']
+/** The dashboard needs the web listener and the credential seam; without either it stays dormant. */
+export const inject = ['webServer', 'credentials']
 
 const MIB = 1024 * 1024
 const HOUR = 60 * 60 * 1000
@@ -728,7 +728,7 @@ export function apply(ctx, config = {}) {
   }
 
   async function keyFor(account) {
-    const credentials = ctx.get('credentials')
+    const credentials = ctx.credentials ?? ctx.get('credentials')
     if (credentials !== undefined && typeof credentials.resolve === 'function') {
       try {
         const value = (await credentials.resolve(account.keyRef))?.value

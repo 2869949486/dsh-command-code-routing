@@ -3,8 +3,8 @@
 [English](README.md) · **简体中文**
 
 一个 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）插件，把
-[Command Code](https://commandcode.ai) 的订阅真正用起来：**账户池 + 额度窗口路由**、
-**按模型的用量看板**、以及**生图桥接的接线** —— 一个包，设置里只有一个页面。
+[Command Code](https://commandcode.ai) 的订阅真正用起来：**账户池 + 额度窗口路由**，
+外加**按模型的用量看板** —— 一个包，设置里只有一个页面。
 
 - **客户端**：一个 `settings.section` 页面，60 秒自动刷新；账户池可增删改、模型表带能力标签，
   输入框上的徽章写的就是你此刻真正走的哪条路由；界面 10 种语言，跟随浏览器。
@@ -109,9 +109,9 @@ provider 块声明的是 GOAT 订阅真正能调到的模型 —— OpenAI 兼�
 
 ## 生图
 
-文本全部走 Command Code，但**生图在 Command Code 没有对应端点** —— 它没有 `/images` 路由，模型目录里也没有
-图像输出模型 —— 所以本包仍然把本机生图桥接接好（`dsh-image-gen` → `127.0.0.1:8791` → 持有一个可生图密钥的
-代理）。`dsh-image-gen` 与 `dsh-image-bridge-supervisor` 指向你自己的图像后端即可；本包只提供接线，不携带密钥。
+Command Code 没有图像输出：`/provider/v1/images/*` 全部 404，模型目录里也没有任何图像输出模型
+（只有 `Qwen/Qwen3.8-Omni-Flash` 这类「图像输入」的多模态理解模型）。所以这个包**只管文本与额度**，
+不接线任何生图工具；需要出图就另配一个能生图的后端。
 
 ## 兼容性
 
