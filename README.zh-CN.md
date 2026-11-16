@@ -13,13 +13,23 @@
 
 ## 安装
 
+从仓库装（唯一的发布渠道 —— 没有 npm 包）：
+
 ```bash
-npm i dsh-command-code-routing
+git clone https://github.com/2869949486/dsh-command-code-routing
 ```
 
-包自带 `cordis.patch.yml`：两个 provider（`commandcode` 走 `/provider/v1/chat/completions`，
-`commandcode-anthropic` 走 `/provider/v1/messages`）和**一条** insert（`id: command-code-router`）。
-`usage:` 与 `router:` 两个子对象分别装看板与路由的配置（两边都有 `path`，不能共用扁平命名空间）。
+然后把 profile 指向这份代码，例如 `~/.dsh/profiles/desktop/package.json`：
+
+```json
+"dependencies": { "dsh-command-code-routing": "link:D:/path/to/dsh-command-code-routing" }
+```
+
+并把同一个名字加进 `dsh.profile.bundles`。改完要**重启 DSH**：宿主插件只在启动时加载。
+
+包自带 `cordis.patch.yml`：一个 provider（`commandcode` 走 `/provider/v1/chat/completions`）和
+**一条** insert（`id: command-code-router`）。`usage:` 与 `router:` 两个子对象分别装看板与路由的配置
+（两边都有 `path`，不能共用扁平命名空间）。
 
 ```yaml
 - insert:
@@ -112,10 +122,10 @@ provider 块声明的是 GOAT 订阅真正能调到的模型 —— OpenAI 兼�
 （`deepseek/deepseek-v4.1-flash`、`moonshotai/Kimi-K3.1-Pro`）：那是协议里的 id，而 DSH 是把 provider
 与 model 分开传的，斜杠安全。所有路由 `max_tokens` 统一 32000，`reasoning_effort` 最高到 `max`。
 
-Command Code 还通过 Anthropic messages 协议（`/provider/v1/messages`）提供 Claude 系列，但 GOAT 只覆盖
-`claude-sonnet-5-5`、`claude-haiku-5-5` 两个，其余全是 premium 档（要 `individual-pro` 起）。包里默认
-**不挂**这条 provider；需要时把 `commandcode-anthropic` 那一段加回 `providers` 即可（`api: anthropic-messages`、
-`baseURL: https://api.commandcode.ai/provider`）。
+包里只挂**一个** provider：`commandcode`。Command Code 还通过 Anthropic messages 协议
+（`/provider/v1/messages`）提供 Claude 系列，但 GOAT 只覆盖 `claude-sonnet-5-5`、`claude-haiku-5-5`
+两个（其余是 premium 档，要 `individual-pro` 起），所以不声明 Claude provider ——
+选择器和看板只留下套餐真正付得起的模型。
 
 ## 额度口径
 

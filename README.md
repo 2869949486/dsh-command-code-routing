@@ -14,14 +14,25 @@ routing**, plus a **per-model usage dashboard** — one package, one Settings pa
 
 ## Install
 
+From the repository (the supported route — there is no npm release):
+
 ```bash
-npm i dsh-command-code-routing
+git clone https://github.com/2869949486/dsh-command-code-routing
 ```
 
-The package ships its own `cordis.patch.yml`: two providers (`commandcode` over
-`/provider/v1/chat/completions`, `commandcode-anthropic` over `/provider/v1/messages`) and a
-**single** insert (`id: command-code-router`). The `usage:` and `router:` sub-objects hold each
-half's settings — both own a `path`, so they cannot share one flat namespace.
+then point the profile at the checkout, e.g. in `~/.dsh/profiles/desktop/package.json`:
+
+```json
+"dependencies": { "dsh-command-code-routing": "link:D:/path/to/dsh-command-code-routing" }
+```
+
+and add the same name to `dsh.profile.bundles`. Restart DSH afterwards: host plugins load only at
+startup.
+
+The package ships its own `cordis.patch.yml`: one provider (`commandcode` over
+`/provider/v1/chat/completions`) and a **single** insert (`id: command-code-router`). The `usage:`
+and `router:` sub-objects hold each half's settings — both own a `path`, so they cannot share one
+flat namespace.
 
 ```yaml
 - insert:
@@ -132,11 +143,10 @@ OpenAI-compatible route. Model ids keep the vendor prefix (`deepseek/deepseek-v4
 fields, so the slash is safe. Every route is capped at `max_tokens: 32000`; `reasoning_effort` is
 accepted up to `max`.
 
-Command Code also serves the Claude family over the Anthropic messages protocol
-(`/provider/v1/messages`), but GOAT only covers `claude-sonnet-5-5` and `claude-haiku-5-5` — the rest
-are premium tier (`individual-pro` and up). The package therefore ships **without** that provider;
-add the `commandcode-anthropic` block back to `providers` to opt in (`api: anthropic-messages`,
-`baseURL: https://api.commandcode.ai/provider`).
+The package ships **one** provider: `commandcode`. Command Code also serves the Claude family over the
+Anthropic messages protocol (`/provider/v1/messages`), but GOAT only covers `claude-sonnet-5-5` and
+`claude-haiku-5-5` (the rest are premium tier, `individual-pro` and up), so no Claude provider is
+declared — the dashboard and the picker stay limited to what the subscription actually pays for.
 
 ## Allowances
 
