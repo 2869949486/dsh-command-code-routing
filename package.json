@@ -21,9 +21,13 @@
     "CONTRIBUTING.md",
     "LICENSE",
     "test.mjs",
+    "scripts/merge-i18n.mjs",
     "locale/*.json",
     "icon.svg"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
