@@ -3,4 +3,5 @@ node_modules/
 .DS_Store
 .dsh-meow/
 _restart.log
+_restart-verify.ps1
 *.bak
