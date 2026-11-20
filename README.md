@@ -1,38 +1,35 @@
 # Command-Code-Routing
 
-[**简体中文**](README.zh-CN.md) · [English](README.md)
+**简体中文** · [English](README.en.md) · [Русский](README.ru.md)
 
-A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin that puts a
-[Command Code](https://commandcode.ai) subscription to work: **an account pool with credit-window
-routing**, plus a **per-model usage dashboard** — one package, one Settings page.
+一个 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`）插件，把
+[Command Code](https://commandcode.ai) 的订阅真正用起来：**账户池 + 额度窗口路由**，
+外加**按模型的用量看板** —— 一个包，设置里只有一个页面。
 
-- **Client** — one `settings.section` page, 60-second refresh, account pool editing, a per-model
-  table with capability tags, and a composer badge that names the route you are actually on.
-  Ten UI languages, following the browser.
-- **Host** — two endpoints: `GET /command-code-usage.json` (usage; `?refresh=1` forces a refresh)
-  and `GET|POST /command-code-quota-router.json` (pool and routing; actions below).
+- **客户端**：一个 `settings.section` 页面，60 秒自动刷新；账户池可增删改、模型表带能力标签，
+  输入框上的徽章写的就是你此刻真正走的哪条路由；界面 10 种语言，跟随浏览器。
+- **Host**：两个接口 —— `GET /command-code-usage.json`（用量，`?refresh=1` 强制刷新）与
+  `GET|POST /command-code-quota-router.json`（账户池与路由，动作见下）。
 
-## Install
+## 安装
 
-From the repository (the supported route — there is no npm release):
+从仓库装（唯一的发布渠道 —— 没有 npm 包）：
 
 ```bash
 git clone https://github.com/2869949486/dsh-command-code-routing
 ```
 
-then point the profile at the checkout, e.g. in `~/.dsh/profiles/desktop/package.json`:
+然后把 profile 指向这份代码，例如 `~/.dsh/profiles/desktop/package.json`：
 
 ```json
 "dependencies": { "dsh-command-code-routing": "link:D:/path/to/dsh-command-code-routing" }
 ```
 
-and add the same name to `dsh.profile.bundles`. Restart DSH afterwards: host plugins load only at
-startup.
+并把同一个名字加进 `dsh.profile.bundles`。改完要**重启 DSH**：宿主插件只在启动时加载。
 
-The package ships its own `cordis.patch.yml`: one provider (`commandcode` over
-`/provider/v1/chat/completions`) and a **single** insert (`id: command-code-router`). The `usage:`
-and `router:` sub-objects hold each half's settings — both own a `path`, so they cannot share one
-flat namespace.
+包自带 `cordis.patch.yml`：一个 provider（`commandcode` 走 `/provider/v1/chat/completions`）和
+**一条** insert（`id: command-code-router`）。`usage:` 与 `router:` 两个子对象分别装看板与路由的配置
+（两边都有 `path`，不能共用扁平命名空间）。
 
 ```yaml
 - insert:
@@ -46,7 +43,7 @@ flat namespace.
           plan: goat
         router:
           path: /command-code-quota-router
-          statusUrl: null            # Command Code publishes no status feed
+          statusUrl: null            # Command Code 没有状态 feed
           routes:
             - primary: { provider: commandcode, model: deepseek/deepseek-v4.1-flash }
               fallback: { provider: deepseek-account, model: deepseek-flash }
@@ -54,127 +51,106 @@ flat namespace.
               fallback: { provider: deepseek-account, model: deepseek-v4-pro }
 ```
 
-Top-level keys apply to both halves; a key inside `usage:` / `router:` overrides it for that half
-only. `usage.plan` names the subscription tier (`goat`), which only decides where the allowance
-number comes from — the live figures always come from the API.
+顶层键对两半都生效，写在 `usage:` / `router:` 里的只覆盖自己那一半。`usage.plan` 只决定月度额度那个
+数字从哪来（`goat`），实时用量永远以接口返回为准。
 
-### Credentials
+### 凭据
 
-`apiKeyRef` (default `COMMANDCODE_API_KEY`) is resolved through the host credential seam, never
-stored in this repository. The account pool addresses further keys as
-`COMMANDCODE_API_KEY_<ID>` (for example `COMMANDCODE_API_KEY_A1`); the key of the account that is
-currently active is mirrored onto `COMMANDCODE_API_KEY`, which is the reference the provider
-reads — so switching accounts never rewrites provider config.
+`apiKeyRef`（默认 `COMMANDCODE_API_KEY`）经宿主凭据 seam 解析，不落库、不进本仓库。账户池里的其它账户
+按 `COMMANDCODE_API_KEY_<ID>` 寻址（例如 `COMMANDCODE_API_KEY_A1`）；当前生效账户的密钥会镜像到
+`COMMANDCODE_API_KEY`，那是 provider 读取的引用，因此切账户不必改任何 provider 配置。
 
-## Credits, not percentages
+## 它算的是额度，不是百分比
 
-Command Code bills dollars against a subscription allowance, so the adapter turns two endpoints
-into the three windows the dashboard has always understood:
+Command Code 是「订阅额度里扣美元」，所以适配器把两个接口折成看板一直认识的三个窗口：
 
-| Dashboard window | Source | Share of the allowance |
+| 看板窗口 | 数据来源 | 占额度比例 |
 | --- | --- | --- |
-| 5 hours (rolling) | `windowLimits.fiveHour` | 20% |
-| This week | `windowLimits.weekly` | 50% |
-| This period | `credits.monthlyCredits` + `subscriptions.currentPeriodEnd` | 100% |
+| 5 小时（rolling） | `windowLimits.fiveHour` | 20% |
+| 本周 | `windowLimits.weekly` | 50% |
+| 本周期 | `credits.monthlyCredits` + `subscriptions.currentPeriodEnd` | 100% |
 
-`GET /alpha/billing/credits` gives used/cap per rolling window plus the remaining credit balance;
-`GET /alpha/billing/subscriptions` supplies the plan id and the period end. The monthly allowance
-is derived from the weekly cap (`weekly.cap / 0.5`), so a plan change is a config edit, not a code
-change. Per-model prices are bundled (input / output / cache-read / cache-write in $/Mtok) and are
-what the per-model column adds up.
+`GET /alpha/billing/credits` 给每个滚动窗口的已用/上限和剩余额度，`GET /alpha/billing/subscriptions`
+给套餐 id 与周期结束时间。月度额度由周上限反推（`weekly.cap / 0.5`），所以换套餐是改配置，不是改代码。
+模型单价内联（输入 / 输出 / 缓存读 / 缓存写，$/Mtok），按模型那一列就是拿它累加的。
 
-Because the API reports dollars instead of a rounded percentage, the implied-plan inference stays off
-for this vendor. Peak pricing, on the other hand, is real: the catalogue price is the **off-peak**
-rate (17 h/day), and the DeepSeek models that carry a peak note bill **2×** during `01–04` and
-`06–10` UTC, Monday to Friday (09:00–12:00 and 14:00–18:00 Beijing). `commandcode.js` owns that rule
-(`PEAK` / `peakFactor`), so cost estimates and the price document double exactly for those models and
-for nobody else — `deepseek-v4-flash-fast` and the `ultrafast` tier stay flat because the pricing page
-prints no peak row for them.
+因为接口给的是美元而不是四舍五入的百分比，「按百分比反推套餐档位」在这个厂商上关掉。**峰谷是真的**：
+目录价是**离峰价**（17 小时/天），带 peak 标注的 DeepSeek 模型在 UTC `01–04`、`06–10` 的工作日
+（北京时间 09:00–12:00、14:00–18:00）按 **2 倍**计。这条规则写在 `commandcode.js` 的 `PEAK` /
+`peakFactor` 里，所以成本估算和价格文档只对这些模型翻倍、别的模型不翻：
+`deepseek-v4-flash-fast` 与 `ultrafast` 档在定价页没有 peak 行，保持平价。
 
-Free previews are capped by request count, not by credits: `stealth/glyph-cluster:free` gets 1000
-requests/day and `thinkingmachines/inkling-2-small:free` gets 200. Their dashboard limit is therefore
-unbounded and their cost is zero — they never consume the plan allowance.
+免费预览模型按请求数限额、不扣额度：`stealth/glyph-cluster:free` 1000 请求/天，
+`thinkingmachines/inkling-2-small:free` 200 请求/天。它们在面板上的额度显示为无限、成本为 0，
+永远不消耗套餐额度。
 
-## Account pool and failover
+## 账户池与轮替
 
-Account order is usage order. Exactly one account is current at a time.
+账户顺序就是使用顺序，任何时候只有一个「当前账户」。
 
-- **A runs out, B takes over.** `QUOTA` / `ACCOUNT_QUOTA` / HTTP 429 with the windows confirmed
-  exhausted, or an auth-class failure (`AUTH`, `INVALID_CREDENTIAL`, `MISSING_CREDENTIAL`, …),
-  marks the account unusable (until the window resets, or 30 minutes for auth) and retries on the
-  next enabled account **inside the same step** — the turn is not degraded.
-- **One model quarantined, not the plan.** A single model reporting exhaustion is isolated
-  (default 30 minutes) while every other model keeps using the allowance.
-- **Whole pool exhausted.** Only then does the route fall back (default `deepseek-account`), probing
-  every 30 minutes or at the rolling reset with a zero-token credits call, and returning to the
-  subscription once it recovers.
-- **Upstream capacity.** With `router.fallbackOnCapacity: true`, a capacity/overload 429 falls back
-  even when credits remain, and the first recovery probe starts after `capacityFallbackDelayMs`
-  (60 s) because capacity rejections usually clear in minutes. The page has manual
-  「fall back / back to subscription」 buttons, or
-  `POST /command-code-quota-router.json {"action":"fallback"}` / `{"action":"primary"}`.
-- **A mid-stream failure never loses a step.** Retries happen inside one `llm/stream` call, so only
-  a primary attempt that has emitted nothing is redirected; once the first token is out the stream
-  belongs to the caller and the failure surfaces as-is — but the route still moves, so the retry of
-  that step lands on the fallback instead of the same wall.
-- **Recovery must be clean for 10 minutes.** During a fallback the probe runs every 60 s; only
-  `recoverStableMs` (10 min) of consecutive successes hands traffic back. Any failure resets the
-  window — that is what stops an upstream hiccup from oscillating.
-- **Reset** clears every exhausted/auth flag and returns to the pool without touching accounts.
+- **A 用完自动用 B**：`QUOTA` / `ACCOUNT_QUOTA` / HTTP 429 且窗口确认耗尽，或鉴权类错误
+  （`AUTH`、`INVALID_CREDENTIAL`、`MISSING_CREDENTIAL` …）时，该账户标记为不可用（额度类到窗口重置，
+  鉴权类 30 分钟），路由切到下一个启用账户并在**同一步重试**，整轮对话不降级。
+- **只隔离一个模型**：单个模型报耗尽、池里还有额度时，只隔离这个模型（默认 30 分钟），其它模型继续走额度。
+- **整池耗尽**：才把这条路整体回退（默认 `deepseek-account`），每 30 分钟或 rolling 重置时刻用零 token 的
+  credits 接口探一次，恢复后自动交回。
+- **上游容量/过载**：`router.fallbackOnCapacity: true` 时，额度没耗尽但上游返回容量类 429 也会回退，
+  回退后第一次探测在 `capacityFallbackDelayMs`（60 秒）后开始，因为容量拒绝通常几分钟就恢复。
+  设置页有「切到官方订阅 / 切回订阅」，也可直接
+  `POST /command-code-quota-router.json {"action":"fallback"}` / `{"action":"primary"}`。
+- **半路失败不丢步**：重试发生在同一次 `llm/stream` 内部，只有「一个 chunk 都还没吐」的主侧尝试会被原地改道；
+  一旦已输出第一个字，流归调用方，失败原样抛出 —— 但**路由照样切换**，所以这一步的重试落在回退侧，
+  而不是再撞同一堵墙。
+- **恢复要连续干净 10 分钟**：回退期间每 60 秒探一次，只有连续 `recoverStableMs`（10 分钟）都成功才交回流量；
+  中间任何一次失败窗口清零重来 —— 这是「上游一抖就来回横跳」的解法。
+- **重置**：清空所有「额度用尽 / 鉴权失败」标记并立刻回到账户池，不动账户与密钥。
 
-## Endpoints
+## 接口
 
-`GET /command-code-usage.json` → `{plan, configuredPlan, detectedPlan, clock, peak, usage,
-usageError, accounts[], activeAccount, models[], totals, pricing}`. `?refresh=1` forces a fresh
-credits read; `POST {"action":"refresh"}` does the same through the body, and
-`POST {"action":"syncPricing"}` re-reads the public price table (off by default for this vendor).
+`GET /command-code-usage.json` → `{plan, configuredPlan, detectedPlan, clock, peak, usage, usageError,
+accounts[], activeAccount, models[], totals, pricing}`。`?refresh=1` 强刷一次额度读数；
+`POST {"action":"refresh"}` 等价；`POST {"action":"syncPricing"}` 重读公开价目（这个厂商默认关着）。
 
-`GET /command-code-quota-router.json` → `{mode, reason, cause, active, accounts[], quarantine,
-routes[], upstream, net, lastFailure}`; keys are always masked (`hint` only). The same path accepts
-`POST {action}` with `netcheck`, `add`, `update`, `remove`, `activate`, `move`, `probe`, `status`,
-`fallback`, `primary`, `reset`. `GET …?key=<account id>` returns one account's key — a local-only
-endpoint used by the “edit key” box.
+`GET /command-code-quota-router.json` → `{mode, reason, cause, active, accounts[], quarantine, routes[],
+upstream, net, lastFailure}`，密钥一律遮罩（只回 `hint`）。同一路径 `POST {action}` 支持
+`netcheck`、`add`、`update`、`remove`、`activate`、`move`、`probe`、`status`、`fallback`、`primary`、
+`reset`。`GET …?key=<账户 id>` 取单个账户的密钥，只用于本机「编辑密钥」输入框。
 
-## Models
+## 模型
 
-The provider block declares the models that a GOAT subscription can actually call — 62 on the
-OpenAI-compatible route. Model ids keep the vendor prefix (`deepseek/deepseek-v4.1-flash`,
-`moonshotai/Kimi-K3.1-Pro`): that is the wire id, and DSH passes provider and model as separate
-fields, so the slash is safe. Every route is capped at `max_tokens: 32000`; `reasoning_effort` is
-accepted up to `max`.
+provider 块声明的是 GOAT 订阅真正能调到的模型 —— OpenAI 兼容线上 62 个。模型 id 保留厂商标识前缀
+（`deepseek/deepseek-v4.1-flash`、`moonshotai/Kimi-K3.1-Pro`）：那是协议里的 id，而 DSH 是把 provider
+与 model 分开传的，斜杠安全。所有路由 `max_tokens` 统一 32000，`reasoning_effort` 最高到 `max`。
 
-The package ships **one** provider: `commandcode`. Command Code also serves the Claude family over the
-Anthropic messages protocol (`/provider/v1/messages`), but GOAT only covers `claude-sonnet-5-5` and
-`claude-haiku-5-5` (the rest are premium tier, `individual-pro` and up), so no Claude provider is
-declared — the dashboard and the picker stay limited to what the subscription actually pays for.
+包里只挂**一个** provider：`commandcode`。Command Code 还通过 Anthropic messages 协议
+（`/provider/v1/messages`）提供 Claude 系列，但 GOAT 只覆盖 `claude-sonnet-5-5`、`claude-haiku-5-5`
+两个（其余是 premium 档，要 `individual-pro` 起），所以不声明 Claude provider ——
+选择器和看板只留下套餐真正付得起的模型。
 
-## Allowances
+## 额度口径
 
-The per-model “monthly cap” in the dashboard is the plan allowance — $70 for GOAT base, derived from
-`/alpha/billing/credits` as the weekly cap ÷ 50% — with the five-hour and weekly windows at 20% and
-50% of it. Command Code's DEAL models carry a published *boosted* allowance, taken from the GOAT
-column and hard-coded in `commandcode.js` as `BOOSTED_ALLOWANCE_USD`:
-`deepseek/deepseek-v4.1-flash`, `z-ai/glm-5.3-flash`, `inclusionai/ling-3.1-flash` and
-`inclusionai/ling-3.1-flash-1019` get $100.
+面板上每个模型的「本月上限」＝套餐额度（GOAT 基础 $70，由 `/alpha/billing/credits` 的 weekly cap ÷ 50%
+推出），5 小时与本周分别是它的 20% / 50%。Command Code 的 DEAL 模型另有官方公布的 boosted 额度，包里按
+GOAT 那一列写死：`deepseek/deepseek-v4.1-flash`、`z-ai/glm-5.3-flash`、`inclusionai/ling-3.1-flash`、
+`inclusionai/ling-3.1-flash-1019` 为 $100（见 `commandcode.js` 的 `BOOSTED_ALLOWANCE_USD`）。
 
-## Images
+## 生图
 
-Command Code produces no images: every `/provider/v1/images/*` route answers 404 and no model in the
-catalogue emits image output (the only image-related entries, such as `Qwen/Qwen3.8-Omni-Flash`,
-take images as *input*). This package therefore covers text and credits only, and wires no image
-tooling — pair it with an image backend of your own if you need one.
+Command Code 没有图像输出：`/provider/v1/images/*` 全部 404，模型目录里也没有任何图像输出模型
+（只有 `Qwen/Qwen3.8-Omni-Flash` 这类「图像输入」的多模态理解模型）。所以这个包**只管文本与额度**，
+不接线任何生图工具；需要出图就另配一个能生图的后端。
 
-## Compatibility
+## 兼容性
 
-- `dsh >= 0.2.0-rc.1` — streaming goes through the public `llm/stream` waterfall.
-- `dsh >= 0.2.2-rc.1` — additionally aligns `agent.model.select()` before each step so persisted
-  request headers and assistant provenance follow the side actually chosen.
+- `dsh >= 0.2.0-rc.1`：流式调用走公开的 `llm/stream` waterfall。
+- `dsh >= 0.2.2-rc.1`：额外在每一步之前用 `agent.model.select()` 对齐，让持久请求头与 assistant 来源跟随
+  实际选中的一侧。
 
-## Development
+## 开发
 
 ```bash
-node test.mjs            # 22 blocks: pure logic, routing, dashboard, client render, patch integrity
-node _smoke-usage.mjs    # live check against the API; needs CC_KEY in the environment
+node test.mjs            # 22 块：纯逻辑、路由、看板、客户端渲染、patch 完整性
+node _smoke-usage.mjs    # 真实接口联调；需要环境变量 CC_KEY
 ```
 
-MIT licensed.
+MIT。
